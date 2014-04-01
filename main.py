@@ -35,17 +35,37 @@ class MyFrame(wx.Frame):
         menuFile.Append(2003,u'保存')
 
         #Bind
-        self.Bind(wx.EVT_MENU,self.OpenProject,id=1001)
-    def OpenProject(self,event):
-        filterFile="All files (*.*) |*.*"
-        opendialog=wx.FileDialog(self,u"选择文件",os.getcwd(),"",filterFile,wx.OPEN)
-        if opendialog.ShowModal()==wx.ID_OK:
-            tFile=opendialog.GetPath()
-            fp=open(tFile)
-            self.rightText.write(fp.read())  
-            fp.close()
-        opendialog.Destroy()
+        self.Bind(wx.EVT_MENU,self.newFile,id=2001)
+        self.Bind(wx.EVT_MENU,self.openFile,id=2002)
+        self.Bind(wx.EVT_MENU,self.saveFile,id=2003)
 
+        self.filePath=''
+    def newFile(self,event):
+        self.rightText.SetValue('')
+        self.fp=''
+    def openFile(self,event):
+        filterFile="All files (*.*) |*.*"
+        openDialog=wx.FileDialog(self,u"选择文件",os.getcwd(),"",filterFile,wx.OPEN)
+        if openDialog.ShowModal()==wx.ID_OK:
+            self.filePath=openDialog.GetPath()
+            fp=open(self.filePath)
+            self.rightText.SetValue(fp.read())  
+            fp.close()
+        openDialog.Destroy()
+    def saveFile(self,event):
+        if self.filePath == '':
+            filterFile="All files (*.*) |*.*"
+            saveDialog=wx.FileDialog(self,u"选择文件",os.getcwd(),"",filterFile,wx.SAVE)
+            if saveDialog.ShowModal() == wx.ID_OK:
+                self.filePath=saveDialog.GetPath()
+                fp=open(self.filePath,'w')
+                fp.write(self.rightText.GetValue())
+                fp.close()
+            saveDialog.Destroy()
+        else:
+            fp=open(self.filePath,'w')
+            fp.write(self.rightText.GetValue())
+            fp.close()
 class MyApp(wx.App):
     def OnInit(self):
         frame=MyFrame()
