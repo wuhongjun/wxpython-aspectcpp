@@ -3,19 +3,47 @@
 import wx
 import wx.aui
 import os
+def appendDir(tree, treeID, sListDir):
+    """遍历路径,将文件生成节点加入到wx的tree中
+        tree wx的tree
+        treeID 上级treeID
+        sListDir 一个绝对路径,会自动遍历下面的子目录
+    """
+    #有些目录没有权限访问的,避免其报错
+    try:
+        ListFirstDir = os.listdir(sListDir)
+        for i in ListFirstDir:
+            sAllDir = sListDir+"/"+i
+            #有些目录名非法,无法生成节点,只有try一把
+            try:
+                childID = tree.AppendItem(treeID, i)
+            except:
+                childID = tree.AppendItem(treeID, "非法名称")
+            #如果是目录,那么递归
+            if os.path.isdir(sAllDir):
+                appendDir(tree, childID, sAllDir)
+    except:
+        pass
 class MyFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self,None,-1,'aspectc++',size=(1024,768))
 
         #layout
         self.mgr=wx.aui.AuiManager(self)
-        self.leftText=wx.TextCtrl(self,-1,'leftText',wx.DefaultPosition,wx.Size(200,768),wx.NO_BORDER | wx.TE_MULTILINE)
-        self.rightText=wx.TextCtrl(self,-1,'rightText',wx.DefaultPosition,wx.Size(824,600),wx.NO_BORDER | wx.TE_MULTILINE)
-        self.bottomText=wx.TextCtrl(self,-1,'bottomText',wx.DefaultPosition,wx.Size(824,168),wx.NO_BORDER | wx.TE_MULTILINE)
+        
+        self.leftPanel=wx.Panel(self,-1,size=(200,768))
+        self.rightText=wx.TextCtrl(self,-1,'',wx.DefaultPosition,wx.Size(824,600),wx.NO_BORDER | wx.TE_MULTILINE)
+        self.bottomText=wx.TextCtrl(self,-1,'',wx.DefaultPosition,wx.Size(824,168),wx.NO_BORDER | wx.TE_MULTILINE)
         self.mgr.AddPane(self.bottomText,wx.aui.AuiPaneInfo().Bottom())
-        self.mgr.AddPane(self.leftText,wx.aui.AuiPaneInfo().Left().Layer(1))
+        self.mgr.AddPane(self.leftPanel,wx.aui.AuiPaneInfo().Left().Layer(1))
         self.mgr.AddPane(self.rightText,wx.aui.AuiPaneInfo().Center().Layer(2))
         self.mgr.Update()
+
+        #leftDirs
+        self.tree=wx.TreeCtrl(self,-1,size=(200,768))
+        self.treeRoot=self.tree.AddRoot('/home/willzhang/')
+        appendDir(self.tree,self.treeRoot,'/home/willzhang/')
+        self.tree.Expand(self.treeRoot)
 
         #menuBar
         menuBar=wx.MenuBar()
@@ -35,11 +63,18 @@ class MyFrame(wx.Frame):
         menuFile.Append(2003,u'保存')
 
         #Bind
+        self.Bind(wx.EVT_MENU,self.newProject,id=1001)
         self.Bind(wx.EVT_MENU,self.newFile,id=2001)
         self.Bind(wx.EVT_MENU,self.openFile,id=2002)
         self.Bind(wx.EVT_MENU,self.saveFile,id=2003)
 
         self.filePath=''
+    def newProject(self,event):
+        print self.tree.GetItemText(self.tree.GetSelection())
+        newProjectDialog = wx.TextEntryDialog(self,"",'project name','')
+        if newProjectDialog.ShowModal() == wx.ID_OK:
+            text=newProjectDialog.GetValue()
+        newProjectDialog.Destroy()
     def newFile(self,event):
         self.rightText.SetValue('')
         self.fp=''
