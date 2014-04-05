@@ -3,46 +3,34 @@
 import wx
 import wx.aui
 import os
-def appendDir(tree, treeID, sListDir):
-    """遍历路径,将文件生成节点加入到wx的tree中
-        tree wx的tree
-        treeID 上级treeID
-        sListDir 一个绝对路径,会自动遍历下面的子目录
-    """
-    #有些目录没有权限访问的,避免其报错
+def appendDir(tree, treeID, sListDir): 
     try:
         ListFirstDir = os.listdir(sListDir)
         for i in ListFirstDir:
             sAllDir = sListDir+"/"+i
-            #有些目录名非法,无法生成节点,只有try一把
             try:
                 childID = tree.AppendItem(treeID, i)
             except:
-                childID = tree.AppendItem(treeID, "非法名称")
-            #如果是目录,那么递归
+                childID = tree.AppendItem(treeID, "?Ƿ?????")
             if os.path.isdir(sAllDir):
                 appendDir(tree, childID, sAllDir)
     except:
         pass
 def appendProject(tree, treeRootID, projectFileDir):
-    """只有在projectfile中且在当前目录下的文件才为工程文件
-    """
     projectFile_fp=open(projectFileDir+'.project')
     fileInDirList=os.listdir(projectFileDir)
-    print 1
-    treeHead=tree.AppendItem(treeRootID,'头文件')
-    print 2
-    treeSource=tree.AppendItem(treeRootID,'源文件')
-    print 3
-    treeAspectHead=tree.AppendItem(treeRootID,'切面文件')
-    print 4
-    treeOther=tree.AppendItem(treeRootID,'资源文件')
-    print 5
+    treeHead=tree.AppendItem(treeRootID,u'头文件')
+    treeSource=tree.AppendItem(treeRootID,u'源文件')
+    treeAspectHead=tree.AppendItem(treeRootID,u'切面文件') 
+    treeOther=tree.AppendItem(treeRootID,u'资源文件')
     projectFileList = projectFile_fp.readlines()
-
+    #for i in fileInDirList:
+    #    print i
+    #for j in projectFileList:
+    #    print j.decode('utf-8')
     for i in fileInDirList:
         for j in projectFileList:
-            if i == j:
+            if i == j.decode('utf-8')[:-1]:
                 file_name = i
                 if file_name.endswith('.h'):
                     tree.AppendItem(treeHead,file_name)
@@ -52,6 +40,14 @@ def appendProject(tree, treeRootID, projectFileDir):
                     tree.AppendItem(treeAspectHead,file_name)
                 else:
                     tree.AppendItem(treeOther,file_name)
+class MyPopupMenu(wx.Menu):
+    def __init__(self,parent):
+        super(MyPopupMenu,self).__init__()
+        self.parent = parent
+        
+        mmi = wx.MenuItem(self,wx.NewId(),u'新建文件')
+        self.AppendItem(mmi)
+        self.Bind(wx.EVT_MENU, parent.newFile, mmi)
 class MyFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self,None,-1,'aspectc++',size=(1024,768))
@@ -70,27 +66,37 @@ class MyFrame(wx.Frame):
         self.mgr.Update()
 
         #leftDirs
-        self.treeRoot=self.tree.AddRoot('/home/willzhang')
-        appendDir(self.tree,self.treeRoot,'/home/willzhang/')
+        self.treeRoot=self.tree.AddRoot('D:\wx')
+        appendDir(self.tree,self.treeRoot,'D:\wx')
         self.tree.Expand(self.treeRoot)
 
         #menuBar
         menuBar=wx.MenuBar()
         menuProject=wx.Menu()
-        menuFile=wx.Menu()
+        menuEdit=wx.Menu()
         menuBar.Append(menuProject,u'工程')
+        menuBar.Append(menuEdit,u'编辑')
         self.SetMenuBar(menuBar)
 
         #menuProject
         menuProject.Append(1001,u'新建')
         menuProject.Append(1002,u'打开')
+        menuEdit.Append(2001,u'保存')
 
         #Bind
         self.Bind(wx.EVT_MENU,self.newProject,id=1001)
+        self.Bind(wx.EVT_MENU,self.openProject,id=1002)
+        self.tree.Bind(wx.EVT_RIGHT_DOWN,self.RightClick)
+        self.Bind(wx.EVT_MENU,self.saveFile,id=2001)
 
         self.filePath=''
         self.projectDir=''
         self.projectName=''
+    def reFresh(self):
+        self.tree.DeleteAllItems()
+        self.treeRoot=self.tree.AddRoot(self.projectName)
+        appendProject(self.tree,self.treeRoot,self.projectDir)
+        self.tree.Expand(self.treeRoot)
     def GetPath(self):
         itemId=self.tree.GetSelection()
         Path=""
@@ -101,29 +107,41 @@ class MyFrame(wx.Frame):
             else:
                 break
         return Path
+    def RightClick(self,event):
+        self.PopupMenu(MyPopupMenu(self),event.GetPosition())
     def newProject(self,event):
         self.projectDir=self.GetPath()
         newProjectDialog = wx.TextEntryDialog(self,"",'project name','')
         if newProjectDialog.ShowModal() == wx.ID_OK:
             self.projectName=newProjectDialog.GetValue()
         newProjectDialog.Destroy()
-        os.mkdir(self.projectDir+self.projectName)
-        os.mknod(self.projectDir+self.projectName+'/'+'.project')
+        self.projectDir+=self.projectName+'/'
+        os.mkdir(self.projectDir)
+        open(self.projectDir+'/'+'.project','w').close()
         self.tree.DeleteAllItems()
-        self.tree.AddRoot(self.projectName)
-        appendProject(self.tree,self.treeRoot,self.projectDir+self.projectName+'/')
-    def newFile(self,event):
-        self.rightText.SetValue('')
-        self.fp=''
-    def openFile(self,event):
-        filterFile="All files (*.*) |*.*"
+        self.treeRoot=self.tree.AddRoot(self.projectName)
+        appendProject(self.tree,self.treeRoot,self.projectDir)
+        self.tree.Expand(self.treeRoot)
+    def openProject(self,event):
+        filterFile="All files (.project) |.project"
         openDialog=wx.FileDialog(self,u"选择文件",os.getcwd(),"",filterFile,wx.OPEN)
         if openDialog.ShowModal()==wx.ID_OK:
-            self.filePath=openDialog.GetPath()
-            fp=open(self.filePath)
-            self.rightText.SetValue(fp.read())  
-            fp.close()
+            self.projectDir=openDialog.GetPath()[:-8]
+            self.projectName=self.projectDir.split('\\')[-2]
+            self.reFresh()
         openDialog.Destroy()
+    def newFile(self,event):
+        newFileNameDialog=wx.TextEntryDialog(self,"",'file name','')
+        newFileNameDialog.ShowModal()
+        newFileName=newFileNameDialog.GetValue()
+        newFileNameDialog.Destroy()
+        self.filePath=self.projectDir+newFileName
+        open(self.filePath,'w').close()
+        fp_project=open(self.projectDir+'.project','a')
+        fp_project.write((newFileName+'\n').encode('utf-8'))
+        self.reFresh()
+    def openFile(self,event):
+        print 1
     def saveFile(self,event):
         if self.filePath == '':
             filterFile="All files (*.*) |*.*"
