@@ -29,14 +29,29 @@ def appendProject(tree, treeRootID, projectFileDir):
     """
     projectFile_fp=open(projectFileDir+'.project')
     fileInDirList=os.listdir(projectFileDir)
+    print 1
     treeHead=tree.AppendItem(treeRootID,'头文件')
+    print 2
     treeSource=tree.AppendItem(treeRootID,'源文件')
-    treeAspectHead=tree.AppendItem(treeRootID,'切面')
+    print 3
+    treeAspectHead=tree.AppendItem(treeRootID,'切面文件')
+    print 4
+    treeOther=tree.AppendItem(treeRootID,'资源文件')
+    print 5
     projectFileList = projectFile_fp.readlines()
-    for i in projectFileList:
-        print i
+
     for i in fileInDirList:
-        print i
+        for j in projectFileList:
+            if i == j:
+                file_name = i
+                if file_name.endswith('.h'):
+                    tree.AppendItem(treeHead,file_name)
+                elif file_name.endswith('.cc') or file_name.endswith('.cpp'):
+                    tree.AppendItem(treeSource,file_name)
+                elif file_name.endswith('.ah'):
+                    tree.AppendItem(treeAspectHead,file_name)
+                else:
+                    tree.AppendItem(treeOther,file_name)
 class MyFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self,None,-1,'aspectc++',size=(1024,768))
@@ -64,23 +79,14 @@ class MyFrame(wx.Frame):
         menuProject=wx.Menu()
         menuFile=wx.Menu()
         menuBar.Append(menuProject,u'工程')
-        menuBar.Append(menuFile,u'文件')
         self.SetMenuBar(menuBar)
 
         #menuProject
         menuProject.Append(1001,u'新建')
         menuProject.Append(1002,u'打开')
 
-        #menuFile
-        menuFile.Append(2001,u'新建')
-        menuFile.Append(2002,u'打开')
-        menuFile.Append(2003,u'保存')
-
         #Bind
         self.Bind(wx.EVT_MENU,self.newProject,id=1001)
-        self.Bind(wx.EVT_MENU,self.newFile,id=2001)
-        self.Bind(wx.EVT_MENU,self.openFile,id=2002)
-        self.Bind(wx.EVT_MENU,self.saveFile,id=2003)
 
         self.filePath=''
         self.projectDir=''
