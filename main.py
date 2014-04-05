@@ -24,6 +24,19 @@ def appendDir(tree, treeID, sListDir):
                 appendDir(tree, childID, sAllDir)
     except:
         pass
+def appendProject(tree, treeRootID, projectFileDir):
+    """只有在projectfile中且在当前目录下的文件才为工程文件
+    """
+    projectFile_fp=open(projectFileDir+'.project')
+    fileInDirList=os.listdir(projectFileDir)
+    treeHead=tree.AppendItem(treeRootID,'头文件')
+    treeSource=tree.AppendItem(treeRootID,'源文件')
+    treeAspectHead=tree.AppendItem(treeRootID,'切面')
+    projectFileList = projectFile_fp.readlines()
+    for i in projectFileList:
+        print i
+    for i in fileInDirList:
+        print i
 class MyFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self,None,-1,'aspectc++',size=(1024,768))
@@ -31,17 +44,18 @@ class MyFrame(wx.Frame):
         #layout
         self.mgr=wx.aui.AuiManager(self)
         
-        self.leftPanel=wx.Panel(self,-1,size=(200,768))
+        self.tree=wx.TreeCtrl(self,-1,size=(200,168))
         self.rightText=wx.TextCtrl(self,-1,'',wx.DefaultPosition,wx.Size(824,600),wx.NO_BORDER | wx.TE_MULTILINE)
         self.bottomText=wx.TextCtrl(self,-1,'',wx.DefaultPosition,wx.Size(824,168),wx.NO_BORDER | wx.TE_MULTILINE)
+        self.syntaxTree=wx.TreeCtrl(self,size=(200,600))
         self.mgr.AddPane(self.bottomText,wx.aui.AuiPaneInfo().Bottom())
-        self.mgr.AddPane(self.leftPanel,wx.aui.AuiPaneInfo().Left().Layer(1))
+        self.mgr.AddPane(self.tree,wx.aui.AuiPaneInfo().Left().Layer(1))
+        self.mgr.AddPane(self.syntaxTree,wx.aui.AuiPaneInfo().Left().Layer(1))
         self.mgr.AddPane(self.rightText,wx.aui.AuiPaneInfo().Center().Layer(2))
         self.mgr.Update()
 
         #leftDirs
-        self.tree=wx.TreeCtrl(self,-1,size=(200,768))
-        self.treeRoot=self.tree.AddRoot('/home/willzhang/')
+        self.treeRoot=self.tree.AddRoot('/home/willzhang')
         appendDir(self.tree,self.treeRoot,'/home/willzhang/')
         self.tree.Expand(self.treeRoot)
 
@@ -69,12 +83,29 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_MENU,self.saveFile,id=2003)
 
         self.filePath=''
+        self.projectDir=''
+        self.projectName=''
+    def GetPath(self):
+        itemId=self.tree.GetSelection()
+        Path=""
+        while True:
+            Path=self.tree.GetItemText(itemId)+'/'+Path
+            if itemId != self.tree.GetRootItem():
+                itemId=self.tree.GetItemParent(itemId)
+            else:
+                break
+        return Path
     def newProject(self,event):
-        print self.tree.GetItemText(self.tree.GetSelection())
+        self.projectDir=self.GetPath()
         newProjectDialog = wx.TextEntryDialog(self,"",'project name','')
         if newProjectDialog.ShowModal() == wx.ID_OK:
-            text=newProjectDialog.GetValue()
+            self.projectName=newProjectDialog.GetValue()
         newProjectDialog.Destroy()
+        os.mkdir(self.projectDir+self.projectName)
+        os.mknod(self.projectDir+self.projectName+'/'+'.project')
+        self.tree.DeleteAllItems()
+        self.tree.AddRoot(self.projectName)
+        appendProject(self.tree,self.treeRoot,self.projectDir+self.projectName+'/')
     def newFile(self,event):
         self.rightText.SetValue('')
         self.fp=''
