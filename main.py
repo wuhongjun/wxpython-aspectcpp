@@ -113,10 +113,11 @@ class MyFrame(wx.Frame):
             m_path=m_path[:-1]
         else:
             m_path=self.projectDir+self.tree.GetItemText(self.tree.GetSelection())
-        self.filePath=m_path
-        fp=open(m_path,'r')
-        self.rightText.SetValue(fp.read().decode("utf-8"))
-        fp.close()
+        if os.path.isfile(m_path):
+            self.filePath=m_path
+            fp=open(m_path,'r')
+            self.rightText.SetValue(fp.read().decode("utf-8"))
+            fp.close()
     def RightClick(self,event):
         self.PopupMenu(MyPopupMenu(self),event.GetPosition())
     def newProject(self,event):
@@ -149,6 +150,7 @@ class MyFrame(wx.Frame):
         open(self.filePath,'w').close()
         fp_project=open(self.projectDir+'.project','a')
         fp_project.write((newFileName+'\n').encode('utf-8'))
+        fp_project.close()
         self.reFresh()
     def openFile(self,event):
         print 1
@@ -159,12 +161,12 @@ class MyFrame(wx.Frame):
             if saveDialog.ShowModal() == wx.ID_OK:
                 self.filePath=saveDialog.GetPath()
                 fp=open(self.filePath,'w')
-                fp.write(self.rightText.GetValue())
+                fp.write(self.rightText.GetValue().encode('utf-8'))
                 fp.close()
             saveDialog.Destroy()
         else:
             fp=open(self.filePath,'w')
-            fp.write(self.rightText.GetValue())
+            fp.write(self.rightText.GetValue().encode('utf-8'))
             fp.close()
 class MyApp(wx.App):
     def OnInit(self):
