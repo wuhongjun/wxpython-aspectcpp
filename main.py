@@ -8,10 +8,7 @@ def appendDir(tree, treeID, sListDir):
         ListFirstDir = os.listdir(sListDir)
         for i in ListFirstDir:
             sAllDir = sListDir+"/"+i
-            try:
-                childID = tree.AppendItem(treeID, i)
-            except:
-                childID = tree.AppendItem(treeID, "?Ƿ?????")
+            childID = tree.AppendItem(treeID, i)
             if os.path.isdir(sAllDir):
                 appendDir(tree, childID, sAllDir)
     except:
@@ -66,8 +63,8 @@ class MyFrame(wx.Frame):
         self.mgr.Update()
 
         #leftDirs
-        self.treeRoot=self.tree.AddRoot('D:\wx')
-        appendDir(self.tree,self.treeRoot,'D:\wx')
+        self.treeRoot=self.tree.AddRoot('D:/wx')
+        appendDir(self.tree,self.treeRoot,'D:/wx')
         self.tree.Expand(self.treeRoot)
 
         #menuBar
@@ -87,11 +84,14 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_MENU,self.newProject,id=1001)
         self.Bind(wx.EVT_MENU,self.openProject,id=1002)
         self.tree.Bind(wx.EVT_RIGHT_DOWN,self.RightClick)
+        self.tree.Bind(wx.EVT_LEFT_DCLICK,self.LeftDClick)
         self.Bind(wx.EVT_MENU,self.saveFile,id=2001)
 
         self.filePath=''
         self.projectDir=''
         self.projectName=''
+    
+
     def reFresh(self):
         self.tree.DeleteAllItems()
         self.treeRoot=self.tree.AddRoot(self.projectName)
@@ -107,6 +107,16 @@ class MyFrame(wx.Frame):
             else:
                 break
         return Path
+    def LeftDClick(self,event):
+        m_path=self.GetPath()
+        if os.path.isfile(m_path[:-1]):
+            m_path=m_path[:-1]
+        else:
+            m_path=self.projectDir+self.tree.GetItemText(self.tree.GetSelection())
+        self.filePath=m_path
+        fp=open(m_path,'r')
+        self.rightText.SetValue(fp.read().decode("utf-8"))
+        fp.close()
     def RightClick(self,event):
         self.PopupMenu(MyPopupMenu(self),event.GetPosition())
     def newProject(self,event):
