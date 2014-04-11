@@ -4,6 +4,7 @@ import wx
 import wx.aui
 import os
 import shutil
+import subprocess
 def appendDir(tree, treeID, sListDir): 
     try:
         ListFirstDir = os.listdir(sListDir)
@@ -73,9 +74,11 @@ class MyFrame(wx.Frame):
         menuProject=wx.Menu()
         menuEdit=wx.Menu()
         menuRun=wx.Menu()
+        menuGraph=wx.Menu()
         menuBar.Append(menuProject,u'工程')
         menuBar.Append(menuEdit,u'编辑')
         menuBar.Append(menuRun,u'运行')
+        menuBar.Append(menuGraph,u'视图')
         self.SetMenuBar(menuBar)
 
         #menuProject
@@ -85,6 +88,7 @@ class MyFrame(wx.Frame):
         menuRun.Append(3001,u'编译')
         menuRun.Append(3002,u'运行')
         menuRun.Append(3003,u'编译并运行')
+        menuGraph.Append(4001,u'调用关系图')
 
         #Bind
         self.Bind(wx.EVT_MENU,self.newProject,id=1001)
@@ -95,6 +99,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_MENU,self.compile,id=3001)
         self.Bind(wx.EVT_MENU,self.exeRun,id=3002)
         self.Bind(wx.EVT_MENU,self.compileAndRun,id=3003)
+        self.Bind(wx.EVT_MENU,self.FunctionGraph,id=4001)
 
         self.filePath=''
         self.projectDir=''
@@ -139,6 +144,7 @@ class MyFrame(wx.Frame):
         self.projectDir+=self.projectName+'/'
         os.mkdir(self.projectDir)
         open(self.projectDir+'/'+'.project','w').close()
+        shutil.copyfile('./data/wx.ah',self.projectDir+'/wx.ah')
         self.tree.DeleteAllItems()
         self.treeRoot=self.tree.AddRoot(self.projectName)
         appendProject(self.tree,self.treeRoot,self.projectDir)
@@ -196,6 +202,18 @@ class MyFrame(wx.Frame):
     def compileAndRun(self,event):
         self.compile(event)
         self.exeRun(event)
+    def FunctionGraph(self,event):
+        os.chdir(self.projectDir)
+        fp=open('FunctionGraph.dot','w')
+        fp.write('digraph G { \n')
+        fp.close()
+        self.compileAndRun(event)
+        fp=open('FunctionGraph.dot','a')
+        fp.write('}')
+        fp.close();
+        os.system("dot.exe -Tpng -o a.png FunctionGraph.dot");
+        cmd='\"rundll32.exe\" C:\WINDOWS\system32\shimgvw.dll,ImageView_Fullscreen '+self.projectDir+'a.png'
+        os.system(cmd)
 class MyApp(wx.App):
     def OnInit(self):
         frame=MyFrame()

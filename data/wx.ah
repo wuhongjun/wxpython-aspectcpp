@@ -1,0 +1,38 @@
+#ifndef __WX_AH__
+#define __WX_AH__
+
+#include <iostream>
+#include <deque>
+#include <string>
+#include<fstream>
+using namespace std;
+
+aspect World 
+{
+	pointcut AllPoint() = execution("% %(...)");
+	deque<string>FunctionStack;
+	advice AllPoint() : before() 
+	{
+		string curFunction(JoinPoint::signature());
+		for(int i=0;i<curFunction.size();i++)
+		{
+			if(curFunction[i] == ' ')
+			{
+				curFunction[i]='_';
+			}
+		}
+		curFunction=curFunction.substr(0,curFunction.size()-2);
+		fstream fout("FunctionGraph.dot",fstream::out | fstream::app);
+		if(!FunctionStack.empty())
+		{
+			fout <<FunctionStack.back()+" -> "+curFunction<< endl;
+		}
+		FunctionStack.push_back(curFunction);
+	}
+	advice AllPoint() : after() 
+	{
+		FunctionStack.pop_back();
+	}
+};
+
+#endif
