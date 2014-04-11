@@ -3,6 +3,7 @@
 import wx
 import wx.aui
 import os
+import shutil
 def appendDir(tree, treeID, sListDir): 
     try:
         ListFirstDir = os.listdir(sListDir)
@@ -71,14 +72,19 @@ class MyFrame(wx.Frame):
         menuBar=wx.MenuBar()
         menuProject=wx.Menu()
         menuEdit=wx.Menu()
+        menuRun=wx.Menu()
         menuBar.Append(menuProject,u'工程')
         menuBar.Append(menuEdit,u'编辑')
+        menuBar.Append(menuRun,u'运行')
         self.SetMenuBar(menuBar)
 
         #menuProject
         menuProject.Append(1001,u'新建')
         menuProject.Append(1002,u'打开')
         menuEdit.Append(2001,u'保存')
+        menuRun.Append(3001,u'编译')
+        menuRun.Append(3002,u'运行')
+        menuRun.Append(3003,u'编译并运行')
 
         #Bind
         self.Bind(wx.EVT_MENU,self.newProject,id=1001)
@@ -86,6 +92,9 @@ class MyFrame(wx.Frame):
         self.tree.Bind(wx.EVT_RIGHT_DOWN,self.RightClick)
         self.tree.Bind(wx.EVT_LEFT_DCLICK,self.LeftDClick)
         self.Bind(wx.EVT_MENU,self.saveFile,id=2001)
+        self.Bind(wx.EVT_MENU,self.compile,id=3001)
+        self.Bind(wx.EVT_MENU,self.exeRun,id=3002)
+        self.Bind(wx.EVT_MENU,self.compileAndRun,id=3003)
 
         self.filePath=''
         self.projectDir=''
@@ -168,6 +177,20 @@ class MyFrame(wx.Frame):
             fp=open(self.filePath,'w')
             fp.write(self.rightText.GetValue().encode('utf-8'))
             fp.close()
+    def compile(self,event):
+        cmd="ag++.exe "
+        files=open(self.projectDir+'/'+'.project','r').readlines()
+        for File in files:
+            if File[:-1].endswith('.cpp') or File[:-1].endswith('.cc'):
+                cmd+=File[:-1]+' '
+        os.chdir(self.projectDir)
+        os.system(cmd)
+    def exeRun(self,event):
+        os.chdir(self.projectDir)
+        os.system('a.exe')
+    def compileAndRun(self,event):
+        self.compile(event)
+        self.exeRun(event)
 class MyApp(wx.App):
     def OnInit(self):
         frame=MyFrame()
