@@ -99,6 +99,7 @@ class MyFrame(wx.Frame):
         self.filePath=''
         self.projectDir=''
         self.projectName=''
+
     
 
     def reFresh(self):
@@ -184,7 +185,11 @@ class MyFrame(wx.Frame):
             if File[:-1].endswith('.cpp') or File[:-1].endswith('.cc'):
                 cmd+=File[:-1]+' '
         os.chdir(self.projectDir)
-        os.system(cmd)
+        os.system(cmd+' 2>tmpfile')
+        compile_info_fp=open('tmpfile','r')
+        compile_info=compile_info_fp.read()
+        compile_info_fp.close()
+        self.bottomText.SetValue(compile_info)
     def exeRun(self,event):
         os.chdir(self.projectDir)
         os.system('a.exe')
