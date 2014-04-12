@@ -65,8 +65,8 @@ class MyFrame(wx.Frame):
         self.mgr.Update()
 
         #leftDirs
-        self.treeRoot=self.tree.AddRoot('D:/wx')
-        appendDir(self.tree,self.treeRoot,'D:/wx')
+        self.treeRoot=self.tree.AddRoot('/home/willzhang/wx')
+        appendDir(self.tree,self.treeRoot,'/home/willzhang/wx')
         self.tree.Expand(self.treeRoot)
 
         #menuBar
@@ -143,8 +143,8 @@ class MyFrame(wx.Frame):
         newProjectDialog.Destroy()
         self.projectDir+=self.projectName+'/'
         os.mkdir(self.projectDir)
-        open(self.projectDir+'/'+'.project','w').close()
-        shutil.copyfile('./data/wx.ah',self.projectDir+'/wx.ah')
+        os.system('touch '+self.projectDir+'/.project')
+        os.system('cp /home/willzhang/wxpython-aspectcpp/data/wx.ah '+self.projectDir+'/wx.ah')
         self.tree.DeleteAllItems()
         self.treeRoot=self.tree.AddRoot(self.projectName)
         appendProject(self.tree,self.treeRoot,self.projectDir)
@@ -154,7 +154,7 @@ class MyFrame(wx.Frame):
         openDialog=wx.FileDialog(self,u"选择文件",os.getcwd(),"",filterFile,wx.OPEN)
         if openDialog.ShowModal()==wx.ID_OK:
             self.projectDir=openDialog.GetPath()[:-8]
-            self.projectName=self.projectDir.split('\\')[-2]
+            self.projectName=self.projectDir.split('/')[-2]
             self.reFresh()
         openDialog.Destroy()
     def newFile(self,event):
@@ -185,7 +185,7 @@ class MyFrame(wx.Frame):
             fp.write(self.rightText.GetValue().encode('utf-8'))
             fp.close()
     def compile(self,event):
-        cmd="ag++.exe "
+        cmd="ag++ "
         files=open(self.projectDir+'/'+'.project','r').readlines()
         for File in files:
             if File[:-1].endswith('.cpp') or File[:-1].endswith('.cc'):
@@ -198,7 +198,7 @@ class MyFrame(wx.Frame):
         self.bottomText.SetValue(compile_info)
     def exeRun(self,event):
         os.chdir(self.projectDir)
-        os.system('a.exe')
+        os.system('./a.out')
     def compileAndRun(self,event):
         self.compile(event)
         self.exeRun(event)
@@ -211,8 +211,8 @@ class MyFrame(wx.Frame):
         fp=open('FunctionGraph.dot','a')
         fp.write('}')
         fp.close();
-        os.system("dot.exe -Tpng -o a.png FunctionGraph.dot");
-        cmd='\"rundll32.exe\" C:\WINDOWS\system32\shimgvw.dll,ImageView_Fullscreen '+self.projectDir+'a.png'
+        os.system("dot -Tpng -o a.png FunctionGraph.dot");
+        cmd='xdg-open '+self.projectDir+'a.png'
         os.system(cmd)
 class MyApp(wx.App):
     def OnInit(self):
