@@ -58,6 +58,7 @@ class MyFrame(wx.Frame):
         self.rightText=wx.TextCtrl(self,-1,'',wx.DefaultPosition,wx.Size(824,600),wx.NO_BORDER | wx.TE_MULTILINE)
         self.bottomText=wx.TextCtrl(self,-1,'',wx.DefaultPosition,wx.Size(824,168),wx.NO_BORDER | wx.TE_MULTILINE)
         self.syntaxTree=wx.TreeCtrl(self,size=(200,600))
+
         self.mgr.AddPane(self.bottomText,wx.aui.AuiPaneInfo().Bottom())
         self.mgr.AddPane(self.tree,wx.aui.AuiPaneInfo().Left().Layer(1))
         self.mgr.AddPane(self.syntaxTree,wx.aui.AuiPaneInfo().Left().Layer(1))
@@ -89,6 +90,7 @@ class MyFrame(wx.Frame):
         menuRun.Append(3002,u'运行')
         menuRun.Append(3003,u'编译并运行')
         menuGraph.Append(4001,u'调用关系图')
+        menuGraph.Append(4002,u'生成分析树')
 
         #Bind
         self.Bind(wx.EVT_MENU,self.newProject,id=1001)
@@ -100,13 +102,11 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_MENU,self.exeRun,id=3002)
         self.Bind(wx.EVT_MENU,self.compileAndRun,id=3003)
         self.Bind(wx.EVT_MENU,self.FunctionGraph,id=4001)
+        self.Bind(wx.EVT_MENU,self.Tokenizer,id=4002)
 
         self.filePath=''
         self.projectDir=''
         self.projectName=''
-
-    
-
     def reFresh(self):
         self.tree.DeleteAllItems()
         self.treeRoot=self.tree.AddRoot(self.projectName)
@@ -213,6 +213,10 @@ class MyFrame(wx.Frame):
         fp.close();
         os.system("dot -Tpng -o a.png FunctionGraph.dot");
         cmd='xdg-open '+self.projectDir+'a.png'
+        os.system(cmd)
+    def Tokenizer(self,event):
+        os.chdir(self.projectDir)
+        cmd='ctags --fields=afmikKlnsStz '+self.projectDir+'*.cpp *.h'
         os.system(cmd)
 class MyApp(wx.App):
     def OnInit(self):
