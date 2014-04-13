@@ -221,13 +221,30 @@ class MyFrame(wx.Frame):
         cmd='ctags --fields=afmikKlnsStz '+self.filePath
         os.system(cmd)
         tagFile = CTags('tags')
+        self.syntaxTree.DeleteAllItems()
+        syntaxTreeRoot=self.syntaxTree.AddRoot(self.tree.GetItemText(self.tree.GetSelection()))
+        varNode=self.syntaxTree.AppendItem(syntaxTreeRoot,u'变量')
+        funcNode=self.syntaxTree.AppendItem(syntaxTreeRoot,u'函数')
+        classNode=self.syntaxTree.AppendItem(syntaxTreeRoot,u'类')
         entry=TagEntry()
         while True:
             status = tagFile.next(entry)
             if status:
-                print entry['name'],entry['kind']
+                if entry['kind'] == 'function':
+                    self.syntaxTree.AppendItem(funcNode,entry['pattern'][2:-2])
+                elif entry['kind'] == 'variable':
+                    self.syntaxTree.AppendItem(varNode,entry['pattern'].split(' ')[0][2:]+' '+entry['name'])
+                elif entry['kind'] == 'class' or entry['kind'] == 'struct':
+                    self.syntaxTree.AppendItem(classNode,entry['pattern'][2:-2])
+                else:
+                    pass
+                print entry['pattern'][2:-2]
             else:
                 break
+        self.syntaxTree.Expand(syntaxTreeRoot)
+        self.syntaxTree.Expand(varNode)
+        self.syntaxTree.Expand(funcNode)
+        self.syntaxTree.Expand(classNode)
 class MyApp(wx.App):
     def OnInit(self):
         frame=MyFrame()
