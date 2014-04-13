@@ -5,6 +5,8 @@ import wx.aui
 import os
 import shutil
 import subprocess
+import ctags
+from ctags import CTags, TagEntry
 def appendDir(tree, treeID, sListDir): 
     try:
         ListFirstDir = os.listdir(sListDir)
@@ -216,8 +218,16 @@ class MyFrame(wx.Frame):
         os.system(cmd)
     def Tokenizer(self,event):
         os.chdir(self.projectDir)
-        cmd='ctags --fields=afmikKlnsStz '+self.projectDir+'*.cpp *.h'
+        cmd='ctags --fields=afmikKlnsStz '+self.filePath
         os.system(cmd)
+        tagFile = CTags('tags')
+        entry=TagEntry()
+        while True:
+            status = tagFile.next(entry)
+            if status:
+                print entry['name'],entry['kind']
+            else:
+                break
 class MyApp(wx.App):
     def OnInit(self):
         frame=MyFrame()
