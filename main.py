@@ -5,6 +5,7 @@ import wx.aui
 import os
 import shutil
 import subprocess
+from wx import stc
 import ctags
 from ctags import CTags, TagEntry
 def appendDir(tree, treeID, sListDir): 
@@ -57,7 +58,7 @@ class MyFrame(wx.Frame):
         self.mgr=wx.aui.AuiManager(self)
         
         self.tree=wx.TreeCtrl(self,-1,size=(200,168))
-        self.rightText=wx.TextCtrl(self,-1,'',wx.DefaultPosition,wx.Size(824,600),wx.NO_BORDER | wx.TE_MULTILINE)
+        self.rightText=stc.StyledTextCtrl(self,-1,pos=wx.DefaultPosition,size=wx.Size(824,600),style=0)
         self.bottomText=wx.TextCtrl(self,-1,'',wx.DefaultPosition,wx.Size(824,168),wx.NO_BORDER | wx.TE_MULTILINE)
         self.syntaxTree=wx.TreeCtrl(self,size=(200,600))
         self.SyntaxItemToLine=dict()#synatex item and line
@@ -135,18 +136,19 @@ class MyFrame(wx.Frame):
         if os.path.isfile(m_path):
             self.filePath=m_path
             fp=open(m_path,'r')
-            self.rightText.SetValue(fp.read().decode("utf-8"))
+            self.rightText.SetText(fp.read().decode("utf-8"))
             fp.close()
     def RightClick(self,event):
         self.PopupMenu(MyPopupMenu(self),event.GetPosition())
     def SyntaxLeftDClick(self,event):
         theLine=self.SyntaxItemToLine[self.syntaxTree.GetItemText(self.syntaxTree.GetSelection())]
         #self.rightText.SetInsertionPoint(theLine*824)
-        texts=self.rightText.GetValue().split('\n')
+        texts=self.rightText.GetText().split('\n')
         cnt=0
         for i in range(theLine):
             cnt+=len(texts[i])+1
-        self.rightText.SetInsertionPoint(cnt-1)
+        self.rightText.GotoPos(cnt-1)
+        #self.rightText.SetInsertionPoint(cnt-1)
     def newProject(self,event):
         self.projectDir=self.GetPath()
         newProjectDialog = wx.TextEntryDialog(self,"",'project name','')
@@ -189,12 +191,12 @@ class MyFrame(wx.Frame):
             if saveDialog.ShowModal() == wx.ID_OK:
                 self.filePath=saveDialog.GetPath()
                 fp=open(self.filePath,'w')
-                fp.write(self.rightText.GetValue().encode('utf-8'))
+                fp.write(self.rightText.GetText().encode('utf-8'))
                 fp.close()
             saveDialog.Destroy()
         else:
             fp=open(self.filePath,'w')
-            fp.write(self.rightText.GetValue().encode('utf-8'))
+            fp.write(self.rightText.GetText().encode('utf-8'))
             fp.close()
     def compile(self,event):
         cmd="ag++ "
