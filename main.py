@@ -60,6 +60,7 @@ class MyFrame(wx.Frame):
         self.rightText=wx.TextCtrl(self,-1,'',wx.DefaultPosition,wx.Size(824,600),wx.NO_BORDER | wx.TE_MULTILINE)
         self.bottomText=wx.TextCtrl(self,-1,'',wx.DefaultPosition,wx.Size(824,168),wx.NO_BORDER | wx.TE_MULTILINE)
         self.syntaxTree=wx.TreeCtrl(self,size=(200,600))
+        self.SyntaxItemToLine=dict()#synatex item and line
 
         self.mgr.AddPane(self.bottomText,wx.aui.AuiPaneInfo().Bottom())
         self.mgr.AddPane(self.tree,wx.aui.AuiPaneInfo().Left().Layer(1))
@@ -99,6 +100,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_MENU,self.openProject,id=1002)
         self.tree.Bind(wx.EVT_RIGHT_DOWN,self.RightClick)
         self.tree.Bind(wx.EVT_LEFT_DCLICK,self.LeftDClick)
+        self.syntaxTree.Bind(wx.EVT_LEFT_DCLICK,self.SyntaxLeftDClick)
         self.Bind(wx.EVT_MENU,self.saveFile,id=2001)
         self.Bind(wx.EVT_MENU,self.compile,id=3001)
         self.Bind(wx.EVT_MENU,self.exeRun,id=3002)
@@ -137,6 +139,14 @@ class MyFrame(wx.Frame):
             fp.close()
     def RightClick(self,event):
         self.PopupMenu(MyPopupMenu(self),event.GetPosition())
+    def SyntaxLeftDClick(self,event):
+        theLine=self.SyntaxItemToLine[self.syntaxTree.GetItemText(self.syntaxTree.GetSelection())]
+        #self.rightText.SetInsertionPoint(theLine*824)
+        texts=self.rightText.GetValue().split('\n')
+        cnt=0
+        for i in range(theLine):
+            cnt+=len(texts[i])+1
+        self.rightText.SetInsertionPoint(cnt-1)
     def newProject(self,event):
         self.projectDir=self.GetPath()
         newProjectDialog = wx.TextEntryDialog(self,"",'project name','')
@@ -221,6 +231,7 @@ class MyFrame(wx.Frame):
         cmd='ctags --fields=afmikKlnsStz '+self.filePath
         os.system(cmd)
         tagFile = CTags('tags')
+        self.SyntaxItemToLine.clear()
         self.syntaxTree.DeleteAllItems()
         syntaxTreeRoot=self.syntaxTree.AddRoot(self.tree.GetItemText(self.tree.GetSelection()))
         varNode=self.syntaxTree.AppendItem(syntaxTreeRoot,u'变量')
@@ -231,16 +242,21 @@ class MyFrame(wx.Frame):
             status = tagFile.next(entry)
             if status:
                 if entry['kind'] == 'function':
-                    self.syntaxTree.AppendItem(funcNode,entry['pattern'][2:-2])
+                    itemID=self.syntaxTree.AppendItem(funcNode,entry['pattern'][2:-2])
+                    self.SyntaxItemToLine[self.syntaxTree.GetItemText(itemID)]=entry['lineNumber']
                 elif entry['kind'] == 'variable':
-                    self.syntaxTree.AppendItem(varNode,entry['pattern'].split(' ')[0][2:]+' '+entry['name'])
+                    itemID=self.syntaxTree.AppendItem(varNode,entry['pattern'].split(' ')[0][2:]+' '+entry['name'])
+                    self.SyntaxItemToLine[self.syntaxTree.GetItemText(itemID)]=entry['lineNumber']
                 elif entry['kind'] == 'class' or entry['kind'] == 'struct':
-                    self.syntaxTree.AppendItem(classNode,entry['pattern'][2:-2])
+                    itemID=self.syntaxTree.AppendItem(classNode,entry['pattern'][2:-2])
+                    self.SyntaxItemToLine[self.syntaxTree.GetItemText(itemID)]=entry['lineNumber']
                 else:
                     pass
-                print entry['pattern'][2:-2]
             else:
                 break
+        #keys=self.SyntaxItemToLine.keys()
+        #for i in keys:
+        #    print i,self.SyntaxItemToLine[i]
         self.syntaxTree.Expand(syntaxTreeRoot)
         self.syntaxTree.Expand(varNode)
         self.syntaxTree.Expand(funcNode)
