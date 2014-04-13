@@ -8,6 +8,7 @@ import subprocess
 from wx import stc
 import ctags
 from ctags import CTags, TagEntry
+from cppHighLight import CppSTC
 def appendDir(tree, treeID, sListDir): 
     try:
         ListFirstDir = os.listdir(sListDir)
@@ -58,7 +59,7 @@ class MyFrame(wx.Frame):
         self.mgr=wx.aui.AuiManager(self)
         
         self.tree=wx.TreeCtrl(self,-1,size=(200,168))
-        self.rightText=stc.StyledTextCtrl(self,-1,pos=wx.DefaultPosition,size=wx.Size(824,600),style=0)
+        self.rightText=CppSTC(self,-1,pos=wx.DefaultPosition,size=wx.Size(824,600),style=0)
         self.bottomText=wx.TextCtrl(self,-1,'',wx.DefaultPosition,wx.Size(824,168),wx.NO_BORDER | wx.TE_MULTILINE)
         self.syntaxTree=wx.TreeCtrl(self,size=(200,600))
         self.SyntaxItemToLine=dict()#synatex item and line
