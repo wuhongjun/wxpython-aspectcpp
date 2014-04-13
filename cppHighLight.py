@@ -136,35 +136,27 @@ class CppSTC(stc.StyledTextCtrl):
         self.StyleSetSpec(stc.STC_STYLE_BRACELIGHT,  "fore:#FFFFFF,back:#0000FF,bold")
         self.StyleSetSpec(stc.STC_STYLE_BRACEBAD,    "fore:#000000,back:#FF0000,bold")
 
-        # Python styles
-        # Default 
-        self.StyleSetSpec(stc.STC_P_DEFAULT, "fore:#000000,face:%(helv)s,size:%(size)d" % faces)
-        # Comments
-        self.StyleSetSpec(stc.STC_P_COMMENTLINE, "fore:#007F00,face:%(other)s,size:%(size)d" % faces)
-        # Number
-        self.StyleSetSpec(stc.STC_P_NUMBER, "fore:#007F7F,size:%(size)d" % faces)
-        # String
-        self.StyleSetSpec(stc.STC_P_STRING, "fore:#7F007F,face:%(helv)s,size:%(size)d" % faces)
-        # Single quoted string
-        self.StyleSetSpec(stc.STC_P_CHARACTER, "fore:#7F007F,face:%(helv)s,size:%(size)d" % faces)
-        # Keyword
-        self.StyleSetSpec(stc.STC_P_WORD, "fore:#00007F,bold,size:%(size)d" % faces)
-        # Triple quotes
-        self.StyleSetSpec(stc.STC_P_TRIPLE, "fore:#7F0000,size:%(size)d" % faces)
-        # Triple double quotes
-        self.StyleSetSpec(stc.STC_P_TRIPLEDOUBLE, "fore:#7F0000,size:%(size)d" % faces)
-        # Class name definition
-        self.StyleSetSpec(stc.STC_P_CLASSNAME, "fore:#0000FF,bold,underline,size:%(size)d" % faces)
-        # Function or method name definition
-        self.StyleSetSpec(stc.STC_P_DEFNAME, "fore:#007F7F,bold,size:%(size)d" % faces)
-        # Operators
-        self.StyleSetSpec(stc.STC_P_OPERATOR, "bold,size:%(size)d" % faces)
-        # Identifiers
-        self.StyleSetSpec(stc.STC_P_IDENTIFIER, "fore:#000000,face:%(helv)s,size:%(size)d" % faces)
-        # Comment-blocks
-        self.StyleSetSpec(stc.STC_P_COMMENTBLOCK, "fore:#7F7F7F,size:%(size)d" % faces)
-        # End of line where string is not closed
-        self.StyleSetSpec(stc.STC_P_STRINGEOL, "fore:#000000,face:%(mono)s,back:#E0C0E0,eol,size:%(size)d" % faces)
+
+        self.StyleSetSpec(stc.STC_C_COMMENT, "fore:#7F7F7F,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_CHARACTER, "fore:#551A8B,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_COMMENTDOC, "fore:#7F7F7F,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_COMMENTLINE, "fore:#7F7F7F,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_COMMENTLINEDOC, "fore:#7F7F7F,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_COMMENTDOCKEYWORD, "fore:#7F7F7F,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_COMMENTDOCKEYWORDERROR, "fore:#7F7F7F,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_UUID, "fore:#4169E1,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_WORD, "fore:#4169E1,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_REGEX, "fore:#A2CD5A,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_WORD2, "fore:#A4D3EE,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_NUMBER, "fore:#007F7F,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_STRING, "fore:#551A8B,face:%(helv)s,size:%(size)d" % faces)
+        #self.StyleSetSpec(stc.STC_C_DEFAULT, "fore:#000000,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_OPERATOR, "fore:#68228B,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_VERBATIM, "fore:#7CCD7C,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_STRINGEOL, "fore:#458B74,face:%(helv)s,size:%(size)d" % faces)
+        #self.StyleSetSpec(stc.STC_C_IDENTIFIER, "fore:#3A5FCD,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_GLOBALCLASS, "fore:#3A5FCD,face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_C_PREPROCESSOR, "fore:#548B54,face:%(helv)s,size:%(size)d" % faces)
 
         self.SetCaretForeground("BLUE")
 
@@ -348,50 +340,4 @@ class CppSTC(stc.StyledTextCtrl):
                 line = line + 1
 
         return line
-
-
-#----------------------------------------------------------------------
-
-_USE_PANEL = 1
-
-def runTest(frame, nb, log):
-    if not _USE_PANEL:
-        ed = p = PythonSTC(nb, -1)
-    else:
-        p = wx.Panel(nb, -1, style = wx.NO_FULL_REPAINT_ON_RESIZE)
-        ed = PythonSTC(p, -1)
-        s = wx.BoxSizer(wx.HORIZONTAL)
-        s.Add(ed, 1, wx.EXPAND)
-        p.SetSizer(s)
-        p.SetAutoLayout(True)
-
-
-    ed.SetText(demoText + open('main.py').read())
-    ed.EmptyUndoBuffer()
-    ed.Colourise(0, -1)
-
-    # line numbers in the margin
-    ed.SetMarginType(1, stc.STC_MARGIN_NUMBER)
-    ed.SetMarginWidth(1, 25)
-
-    return p
-
-
-
-#----------------------------------------------------------------------
-
-
-overview = """\
-<html><body>
-Once again, no docs yet.  <b>Sorry.</b>  But <a href="data/stc.h.html">this</a>
-and <a href="http://www.scintilla.org/ScintillaDoc.html">this</a> should
-be helpful.
-</body><html>
-"""
-
-
-if __name__ == '__main__':
-    import sys,os
-    import run
-    run.main(['', os.path.basename(sys.argv[0])] + sys.argv[1:])
 
